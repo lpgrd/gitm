@@ -1,0 +1,64 @@
+{
+  "name": "@loopgrid/gitm",
+  "version": "1.0.1",
+  "description": "Seamlessly manage multiple git accounts on the same device",
+  "main": "dist/cli.js",
+  "bin": {
+    "gitm": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/cli.ts",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write 'src/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts'",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "git",
+    "multiple-accounts",
+    "ssh",
+    "github",
+    "gitlab",
+    "bitbucket",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^11.1.0",
+    "conf": "^11.0.2",
+    "inquirer": "^9.3.7",
+    "simple-git": "^3.28.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.8",
+    "@types/node": "^24.0.7",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "c8": "^10.1.3",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "prettier": "^3.0.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
