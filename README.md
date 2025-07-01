@@ -16,6 +16,7 @@
 
 ## Table of Contents
 
+- [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Commands](#commands)
@@ -26,6 +27,29 @@
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
+
+## Prerequisites
+
+### All Platforms
+- Node.js 14 or higher
+- Git installed and configured
+
+### Windows Specific Requirements
+gitm requires OpenSSH to be installed. You have several options:
+
+**Option 1: Windows 10/11 Built-in OpenSSH (Recommended)**
+1. Open Settings → Apps → Optional Features
+2. Click "Add a feature"
+3. Search for "OpenSSH Client" and install it
+4. Restart your terminal
+
+**Option 2: Git for Windows**
+1. Install [Git for Windows](https://git-scm.com/download/win)
+2. During installation, select "Use Git and optional Unix tools from the Command Prompt"
+3. This will add `ssh`, `ssh-keygen`, and `ssh-add` to your PATH
+
+**Option 3: Use Git Bash**
+- If you have Git installed, run gitm commands from Git Bash which includes all SSH tools
 
 ## Installation
 
@@ -379,6 +403,19 @@ gitm auth personal  # Re-run setup
 
 # 3. Test SSH directly
 ssh -T git@github.com-personal
+```
+
+### Windows: SSH Agent Not Running
+
+If you see "Could not add key to ssh-agent" on Windows:
+
+```bash
+# Start ssh-agent service (run as Administrator)
+Get-Service ssh-agent | Set-Service -StartupType Automatic
+Start-Service ssh-agent
+
+# Or manually add your key
+ssh-add C:\Users\YourName\.ssh\gitm_personal_github
 ```
 
 ### Port 22 Blocked

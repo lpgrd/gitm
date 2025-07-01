@@ -1,4 +1,5 @@
 import Conf from 'conf';
+import { APP_VERSION } from '@/config/version';
 
 interface AuthState {
   [profile: string]: {
@@ -12,7 +13,7 @@ interface AuthState {
 
 const authStateConfig = new Conf({
   projectName: 'gitm-auth-state',
-  projectVersion: '1.0.0',
+  projectVersion: APP_VERSION,
 });
 
 /**
