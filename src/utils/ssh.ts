@@ -124,8 +124,10 @@ Host ${host}
     const newConfig = existingConfig.trim() + '\n' + configEntry;
     await fs.writeFile(SSH_CONFIG_PATH, newConfig);
 
-    // Set proper permissions
-    await fs.chmod(SSH_CONFIG_PATH, 0o600);
+    // Set proper permissions (Unix-like systems only)
+    if (process.platform !== 'win32') {
+      await fs.chmod(SSH_CONFIG_PATH, 0o600);
+    }
   } catch (error) {
     throw new Error(`Failed to update SSH config: ${(error as Error).message}`);
   }
@@ -145,7 +147,13 @@ export async function addSSHKeyToAgent(keyPath: string): Promise<void> {
     await safeExec('ssh-add', [keyPath]);
   } catch {
     // It's ok if this fails, not all systems have ssh-agent running
-    console.warn('Could not add key to ssh-agent (this is ok)');
+    if (process.platform === 'win32') {
+      console.warn(
+        'Could not add key to ssh-agent. On Windows, you may need to start the ssh-agent service.'
+      );
+    } else {
+      console.warn('Could not add key to ssh-agent (this is ok)');
+    }
   }
 }
 

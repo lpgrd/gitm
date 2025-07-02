@@ -2,13 +2,14 @@ import Conf from 'conf';
 import path from 'path';
 import { GitAccount, GitAccounts, ConfigKeys, GitProvider, StoredCustomProvider } from '@/types';
 import { SSH_KEY_DIR } from '@/config/constants';
+import { APP_VERSION } from '@/config/version';
 
 /**
  * Configuration store instance
  */
 const config = new Conf({
   projectName: 'gitm',
-  projectVersion: '1.0.0',
+  projectVersion: APP_VERSION,
 });
 
 /**

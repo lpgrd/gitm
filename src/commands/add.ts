@@ -5,6 +5,7 @@ import { getProviderList, getProviderDisplayName, getProviderConfig } from '@/ut
 import { isValidProfileName } from '@/utils/shell';
 import { GitAccount } from '@/types';
 import { logSuccess, logError, logWarning, logInfo } from '@/utils/cli';
+import { checkSSHTools, getSSHInstallInstructions } from '@/utils/system';
 
 /**
  * Add a new git account
@@ -12,6 +13,15 @@ import { logSuccess, logError, logWarning, logInfo } from '@/utils/cli';
  * @param options - Command options
  */
 export async function addAccount(profile: string, options?: { provider?: string }): Promise<void> {
+  // Check for required SSH tools
+  const sshTools = await checkSSHTools();
+  if (!sshTools.sshKeygen) {
+    logError('SSH tools are not available on your system.');
+    console.log();
+    console.log(getSSHInstallInstructions());
+    return;
+  }
+
   if (!isValidProfileName(profile)) {
     logError('Invalid profile name. Use only letters, numbers, dash, and underscore.');
     return;

@@ -1,0 +1,41 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    name: Validate Code Quality, Tests & Security
+
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Verify code formatting (Prettier)
+        run: npm run format:check
+
+      - name: Check code quality (ESLint)
+        run: npm run lint
+
+      - name: Verify TypeScript types
+        run: npm run typecheck
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Run test suite
+        run: npm run test
+
+      - name: Check for security vulnerabilities
+        run: npm audit --audit-level=high

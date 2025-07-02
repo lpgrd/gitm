@@ -358,12 +358,14 @@ async function testSSHConnection(
       logInfo('Alternative solutions:');
       logInfo('1. Try using HTTPS instead of SSH for this repository');
       logInfo('2. Configure SSH to use port 443:');
-      log(chalk.cyan('   Add this to ~/.ssh/config:'), LogLevel.PLAIN);
+      const sshConfigPath = path.join(os.homedir(), '.ssh', 'config');
+      const identityPath = path.join(os.homedir(), '.ssh', `gitm_${profile}_${provider}`);
+      log(chalk.cyan(`   Add this to ${sshConfigPath}:`), LogLevel.PLAIN);
       log(chalk.gray(`   Host ${provider}.com-${profile}`), LogLevel.PLAIN);
       log(chalk.gray(`     HostName ssh.${provider}.com`), LogLevel.PLAIN);
       log(chalk.gray('     Port 443'), LogLevel.PLAIN);
       log(chalk.gray('     User git'), LogLevel.PLAIN);
-      log(chalk.gray(`     IdentityFile ~/.ssh/gitm_${profile}_${provider}`), LogLevel.PLAIN);
+      log(chalk.gray(`     IdentityFile ${identityPath}`), LogLevel.PLAIN);
       logInfo("3. Check if you're behind a firewall or proxy");
       return false;
     } else if (output.includes('Permission denied')) {

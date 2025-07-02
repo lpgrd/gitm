@@ -12,10 +12,11 @@ import { showStatus } from '@/commands/status';
 import { authenticateAccount } from '@/commands/auth';
 import { verifyAccount } from '@/commands/verify';
 import { listProviders, addProvider, removeProvider, showProvider } from '@/commands/provider';
+import { APP_VERSION } from '@/config/version';
 
 const program = new Command();
 
-program.name('gitm').description('Seamlessly manage multiple git accounts').version('1.0.0');
+program.name('gitm').description('Seamlessly manage multiple git accounts').version(APP_VERSION);
 
 program
   .command('add <profile>')
