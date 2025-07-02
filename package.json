@@ -28,6 +28,14 @@
   ],
   "author": "",
   "license": "MIT",
+  "homepage": "https://github.com/lpgrd/gitm#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lpgrd/gitm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lpgrd/gitm/issues"
+  },
   "publishConfig": {
     "access": "public"
   },

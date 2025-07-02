@@ -32,13 +32,13 @@ export async function checkSSHTools(): Promise<{
   const [sshKeygen, sshAdd, ssh] = await Promise.all([
     commandExists('ssh-keygen'),
     commandExists('ssh-add'),
-    commandExists('ssh')
+    commandExists('ssh'),
   ]);
 
   return {
     sshKeygen,
     sshAdd,
-    ssh
+    ssh,
   };
 }
 

@@ -148,7 +148,9 @@ export async function addSSHKeyToAgent(keyPath: string): Promise<void> {
   } catch {
     // It's ok if this fails, not all systems have ssh-agent running
     if (process.platform === 'win32') {
-      console.warn('Could not add key to ssh-agent. On Windows, you may need to start the ssh-agent service.');
+      console.warn(
+        'Could not add key to ssh-agent. On Windows, you may need to start the ssh-agent service.'
+      );
     } else {
       console.warn('Could not add key to ssh-agent (this is ok)');
     }
