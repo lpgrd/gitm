@@ -1,5 +1,11 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
+import { readFileSync } from 'fs';
+
+// Read version from package.json
+const packageJson = JSON.parse(
+  readFileSync(path.join(__dirname, 'package.json'), 'utf-8')
+);
 
 export default defineConfig({
   test: {
@@ -23,5 +29,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+    __APP_NAME__: JSON.stringify(packageJson.name),
   },
 });
