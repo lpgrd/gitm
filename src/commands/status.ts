@@ -8,6 +8,7 @@ import {
   sectionHeader,
   formatKeyValue,
   logInfo,
+  maskEmail,
 } from '@/utils/cli';
 import chalk from 'chalk';
 
@@ -38,7 +39,7 @@ export async function showStatus(): Promise<void> {
       if (gitUser.name && gitUser.email) {
         console.log(chalk.green('Git User Configuration:'));
         console.log(formatKeyValue('Name', gitUser.name));
-        console.log(formatKeyValue('Email', gitUser.email));
+        console.log(formatKeyValue('Email', maskEmail(gitUser.email)));
       } else {
         logWarning('No git user configured for this repository');
       }

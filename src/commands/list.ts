@@ -1,5 +1,5 @@
 import { getAccounts } from '@/lib/config';
-import { log, logWarning, logInfo, sectionHeader, formatKeyValue } from '@/utils/cli';
+import { log, logWarning, logInfo, sectionHeader, formatKeyValue, maskEmail } from '@/utils/cli';
 import chalk from 'chalk';
 
 /**
@@ -21,7 +21,7 @@ export function listAccounts(): void {
     const account = accounts[profile];
     log(chalk.cyan(`  ${profile}`));
     log(formatKeyValue('Name', account.name, 4));
-    log(formatKeyValue('Email', account.email, 4));
+    log(formatKeyValue('Email', maskEmail(account.email), 4));
     log(formatKeyValue('Provider', account.provider, 4));
     log(formatKeyValue('Username', account.username, 4));
     console.log();

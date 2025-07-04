@@ -1,7 +1,55 @@
 import fs from 'fs/promises';
+import crypto from 'crypto';
 import { SSH_CONFIG_PATH, DEFAULT_SSH_KEY_TYPE, SSH_KEY_DIR } from '@/config/constants';
 import { SSHKeyOptions } from '@/types';
 import { safeExec, isPathSafe } from '@/utils/shell';
+
+/**
+ * Set secure file permissions for SSH-related files
+ * @param filePath - Path to the file
+ * @throws Error if permission setting fails
+ */
+export async function setSecureFilePermissions(filePath: string): Promise<void> {
+  try {
+    if (process.platform === 'win32') {
+      // Windows: Use icacls to set permissions
+      // Remove inheritance and grant only current user full control
+      const username = process.env.USERNAME || process.env.USER;
+      if (!username) {
+        throw new Error('Could not determine current user');
+      }
+
+      // Reset permissions, remove inheritance, grant only current user
+      const commands = [
+        // Remove inheritance while copying current permissions
+        ['icacls', [filePath, '/inheritance:r']],
+        // Grant full control only to current user
+        ['icacls', [filePath, '/grant:r', `${username}:F`]],
+        // Remove all other users if they exist
+        ['icacls', [filePath, '/remove', 'Users']],
+        ['icacls', [filePath, '/remove', 'Everyone']],
+        ['icacls', [filePath, '/remove', 'Authenticated Users']],
+      ];
+
+      for (const [cmd, args] of commands) {
+        try {
+          await safeExec(cmd as string, args as string[]);
+        } catch (error) {
+          // Some remove commands might fail if the user/group doesn't exist, that's ok
+          if (!args.includes('/remove')) {
+            throw error;
+          }
+        }
+      }
+    } else {
+      // Unix-like systems: Use chmod
+      await fs.chmod(filePath, 0o600);
+    }
+  } catch (error) {
+    // Log warning but don't fail the operation
+    console.warn(`Warning: Could not set secure permissions on ${filePath}: ${(error as Error).message}`);
+  }
+}
 
 /**
  * Generate a new SSH key pair
@@ -14,7 +62,6 @@ import { safeExec, isPathSafe } from '@/utils/shell';
 export async function generateSSHKey(
   keyPath: string,
   email: string,
-  comment: string,
   options: SSHKeyOptions = {}
 ): Promise<void> {
   // Validate the key path is within SSH directory
@@ -23,17 +70,25 @@ export async function generateSSHKey(
   }
 
   const keyType = options.type || DEFAULT_SSH_KEY_TYPE;
-  const keyComment = `${email} (gitm: ${comment})`;
   const passphrase = options.passphrase || '';
+  const comment = options.comment || email;
 
-  const args = ['-t', keyType, '-f', keyPath, '-N', passphrase, '-C', keyComment];
+  const args = ['-t', keyType, '-f', keyPath, '-N', passphrase, '-C', comment];
 
   if (keyType === 'rsa' && options.bits) {
-    args.push('-b', options.bits.toString());
+    args.splice(2, 0, '-b', options.bits.toString());
   }
 
   try {
     await safeExec('ssh-keygen', args);
+    
+    // Set secure permissions on the private key
+    await setSecureFilePermissions(keyPath);
+    
+    // Public key should be readable but not writable by others
+    if (process.platform !== 'win32') {
+      await fs.chmod(`${keyPath}.pub`, 0o644);
+    }
   } catch (error) {
     throw new Error(`Failed to generate SSH key: ${(error as Error).message}`);
   }
@@ -124,10 +179,8 @@ Host ${host}
     const newConfig = existingConfig.trim() + '\n' + configEntry;
     await fs.writeFile(SSH_CONFIG_PATH, newConfig);
 
-    // Set proper permissions (Unix-like systems only)
-    if (process.platform !== 'win32') {
-      await fs.chmod(SSH_CONFIG_PATH, 0o600);
-    }
+    // Set proper permissions
+    await setSecureFilePermissions(SSH_CONFIG_PATH);
   } catch (error) {
     throw new Error(`Failed to update SSH config: ${(error as Error).message}`);
   }
@@ -222,4 +275,48 @@ export async function readPublicKey(keyPath: string): Promise<string> {
   }
 
   return await fs.readFile(`${keyPath}.pub`, 'utf-8');
+}
+
+/**
+ * Get the fingerprint of an SSH public key
+ * @param publicKey - The SSH public key content
+ * @returns The SHA256 fingerprint of the key
+ */
+export function getSSHKeyFingerprint(publicKey: string): string {
+  // Extract the base64-encoded key data (second part of the key)
+  const keyParts = publicKey.trim().split(/\s+/);
+  if (keyParts.length < 2) {
+    throw new Error('Invalid SSH public key format');
+  }
+  
+  const keyData = keyParts[1];
+  const keyBuffer = Buffer.from(keyData, 'base64');
+  
+  // Calculate SHA256 hash
+  const hash = crypto.createHash('sha256').update(keyBuffer).digest('base64');
+  
+  // Format as standard SSH fingerprint (remove padding)
+  const fingerprint = hash.replace(/=+$/, '');
+  
+  return `SHA256:${fingerprint}`;
+}
+
+/**
+ * Get SSH key info including type and fingerprint
+ * @param publicKey - The SSH public key content
+ * @returns Object with key type and fingerprint
+ */
+export function getSSHKeyInfo(publicKey: string): { type: string; fingerprint: string } {
+  const keyParts = publicKey.trim().split(/\s+/);
+  if (keyParts.length < 2) {
+    throw new Error('Invalid SSH public key format');
+  }
+  
+  const keyType = keyParts[0]; // e.g., ssh-rsa, ssh-ed25519
+  const fingerprint = getSSHKeyFingerprint(publicKey);
+  
+  return {
+    type: keyType,
+    fingerprint
+  };
 }

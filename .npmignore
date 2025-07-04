@@ -9,7 +9,7 @@ tsup.config.prod.ts
 .prettierrc
 
 # Testing
-tests/
+test/
 coverage/
 *.test.ts
 *.spec.ts

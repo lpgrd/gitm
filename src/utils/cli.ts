@@ -96,3 +96,57 @@ export function formatKeyValue(key: string, value: string, indent: number = 2): 
 export function sectionHeader(title: string): string {
   return chalk.bold(`\n${title}:\n`);
 }
+
+/**
+ * Mask an email address for privacy
+ * @param email - Email address to mask
+ * @returns Masked email (e.g., u***r@e****e.com)
+ */
+export function maskEmail(email: string): string {
+  const parts = email.split('@');
+  if (parts.length !== 2) return email;
+  
+  const [local, domain] = parts;
+  
+  // Check for empty local part
+  if (!local) return email;
+  
+  const domainParts = domain.split('.');
+  
+  // Check if domain has at least one dot (valid email format)
+  if (domainParts.length < 2) return email;
+  
+  // Mask local part (keep first and last char if length > 2)
+  let maskedLocal: string;
+  if (local.length === 1) {
+    maskedLocal = local;
+  } else if (local.length === 2) {
+    maskedLocal = local[0] + '*';
+  } else if (local.length <= 5) {
+    // For short names, use exact number of asterisks
+    maskedLocal = local[0] + '*'.repeat(local.length - 2) + local[local.length - 1];
+  } else {
+    // For longer names, limit to 3 asterisks
+    maskedLocal = local[0] + '***' + local[local.length - 1];
+  }
+  
+  // Mask domain (keep first and last char of main part if length > 2)
+  const mainDomain = domainParts[0];
+  let maskedDomain: string;
+  if (mainDomain.length === 1) {
+    maskedDomain = mainDomain;
+  } else if (mainDomain.length === 2) {
+    maskedDomain = mainDomain[0] + '*';
+  } else if (mainDomain.length <= 6) {
+    // For short domains, use exact number of asterisks
+    maskedDomain = mainDomain[0] + '*'.repeat(mainDomain.length - 2) + mainDomain[mainDomain.length - 1];
+  } else {
+    // For longer domains, limit to 4 asterisks
+    maskedDomain = mainDomain[0] + '****' + mainDomain[mainDomain.length - 1];
+  }
+  
+  // Reconstruct email with TLD intact
+  const tld = domainParts.slice(1).join('.');
+  return `${maskedLocal}@${maskedDomain}.${tld}`;
+}
+
