@@ -32,7 +32,7 @@ export async function initRepo(options: { ssh?: boolean } = { ssh: true }): Prom
 
     if (detection.profile) {
       logSuccess(`Auto-detected account: ${detection.profile}`);
-      
+
       const { confirmDetection } = await inquirer.prompt<{ confirmDetection: boolean }>([
         {
           type: 'confirm',
@@ -59,7 +59,7 @@ export async function initRepo(options: { ssh?: boolean } = { ssh: true }): Prom
             })),
           },
         ]);
-        
+
         selectedProfile = profile;
       }
     } else if (detection.candidates && detection.candidates.length > 0) {

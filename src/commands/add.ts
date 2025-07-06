@@ -109,7 +109,9 @@ export async function addAccount(profile: string, options?: { provider?: string 
 
   if (answers.generateSSH) {
     try {
-      await generateSSHKey(sshKeyPath, answers.email, { comment: `${answers.email} (gitm: ${profile})` });
+      await generateSSHKey(sshKeyPath, answers.email, {
+        comment: `${answers.email} (gitm: ${profile})`,
+      });
       logSuccess('SSH key generated successfully');
     } catch (error) {
       logError(`Failed to generate SSH key: ${(error as Error).message}`);

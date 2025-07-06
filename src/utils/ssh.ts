@@ -47,7 +47,9 @@ export async function setSecureFilePermissions(filePath: string): Promise<void> 
     }
   } catch (error) {
     // Log warning but don't fail the operation
-    console.warn(`Warning: Could not set secure permissions on ${filePath}: ${(error as Error).message}`);
+    console.warn(
+      `Warning: Could not set secure permissions on ${filePath}: ${(error as Error).message}`
+    );
   }
 }
 
@@ -81,10 +83,10 @@ export async function generateSSHKey(
 
   try {
     await safeExec('ssh-keygen', args);
-    
+
     // Set secure permissions on the private key
     await setSecureFilePermissions(keyPath);
-    
+
     // Public key should be readable but not writable by others
     if (process.platform !== 'win32') {
       await fs.chmod(`${keyPath}.pub`, 0o644);
@@ -288,16 +290,16 @@ export function getSSHKeyFingerprint(publicKey: string): string {
   if (keyParts.length < 2) {
     throw new Error('Invalid SSH public key format');
   }
-  
+
   const keyData = keyParts[1];
   const keyBuffer = Buffer.from(keyData, 'base64');
-  
+
   // Calculate SHA256 hash
   const hash = crypto.createHash('sha256').update(keyBuffer).digest('base64');
-  
+
   // Format as standard SSH fingerprint (remove padding)
   const fingerprint = hash.replace(/=+$/, '');
-  
+
   return `SHA256:${fingerprint}`;
 }
 
@@ -311,12 +313,12 @@ export function getSSHKeyInfo(publicKey: string): { type: string; fingerprint: s
   if (keyParts.length < 2) {
     throw new Error('Invalid SSH public key format');
   }
-  
+
   const keyType = keyParts[0]; // e.g., ssh-rsa, ssh-ed25519
   const fingerprint = getSSHKeyFingerprint(publicKey);
-  
+
   return {
     type: keyType,
-    fingerprint
+    fingerprint,
   };
 }

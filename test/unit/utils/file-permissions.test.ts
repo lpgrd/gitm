@@ -77,7 +77,7 @@ describe('File Permissions', () => {
       
       // Simulate failure on remove commands
       mockSafeExec.mockImplementation(async (cmd, args) => {
-        if (args.includes('/remove')) {
+        if (args && args.includes('/remove')) {
           throw new Error('No mapping between account names and security IDs was done');
         }
         return { stdout: '', stderr: '' };

@@ -3,7 +3,15 @@ import { setRepoConfig, getCurrentRepo, updateRemoteUrl } from '@/utils/git';
 import { updateSSHConfig, addSSHKeyToAgent, getSSHRemoteUrl } from '@/utils/ssh';
 import { detectProvider } from '@/utils/providers';
 import { isValidProfileName } from '@/utils/shell';
-import { logError, logSuccess, logDebug, logWarning, logInfo, formatKeyValue, maskEmail } from '@/utils/cli';
+import {
+  logError,
+  logSuccess,
+  logDebug,
+  logWarning,
+  logInfo,
+  formatKeyValue,
+  maskEmail,
+} from '@/utils/cli';
 
 /**
  * Set a specific account for the current repository

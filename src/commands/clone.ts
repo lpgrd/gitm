@@ -36,7 +36,7 @@ export async function cloneRepo(
 
   if (detection.profile) {
     logSuccess(`Auto-detected account: ${detection.profile}`);
-    
+
     const { confirmDetection } = await inquirer.prompt<{ confirmDetection: boolean }>([
       {
         type: 'confirm',
@@ -63,7 +63,7 @@ export async function cloneRepo(
           })),
         },
       ]);
-      
+
       selectedProfile = profile;
       selectedAccount = getAccount(profile);
     }
