@@ -1,5 +1,5 @@
 import { getAccount } from '@/lib/config';
-import { readPublicKey, updateSSHConfig } from '@/utils/ssh';
+import { readPublicKey, updateSSHConfig, getSSHKeyInfo } from '@/utils/ssh';
 import { logError, logSuccess, logInfo, log, LogLevel } from '@/utils/cli';
 import { getAuthState, updateAuthState, clearAuthState, isAuthCompleted } from '@/utils/auth-state';
 import { safeExec } from '@/utils/shell';
@@ -46,9 +46,11 @@ export async function authenticateAccount(profile: string): Promise<void> {
 
   try {
     const publicKey = await readPublicKey(account.sshKeyPath);
+    const keyInfo = getSSHKeyInfo(publicKey);
 
-    console.log(chalk.bold('\nSSH Public Key for ' + profile + ':\n'));
-    console.log(chalk.gray(publicKey));
+    console.log(chalk.bold('\nSSH Key Details for ' + profile + ':\n'));
+    console.log(chalk.cyan('Type: ') + keyInfo.type);
+    console.log(chalk.cyan('Fingerprint: ') + keyInfo.fingerprint);
 
     const providerUrls: Record<string, string> = {
       github: 'https://github.com/settings/keys',

@@ -41,3 +41,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Code coverage dependencies and scripts (`vitest coverage`, `c8`, `jest`)
 - Duplicate npm scripts (consolidated lint/format variants)
+
+## [1.1.0] - 2025-07-06
+
+### Added
+- **Email Masking**: All email addresses are now masked by default in command outputs (e.g., `u***r@e****e.com`)
+- **SSH Key Fingerprints**: `auth` command displays SSH key fingerprint (SHA256) instead of the full public key
+- **Windows File Permissions**: Implemented ACL-based permissions for SSH config and key files on Windows using `icacls`
+
+### Changed
+- **Profile Auto-detection**: Now requires user confirmation before applying detected profiles
+- **Account Selection**: Removed email addresses from selection dropdowns in `clone` and `init` commands
+- **SSH Key Info**: Removed comment field from SSH key information display
+
+### Fixed
+- SSH key generation failing due to missing comment parameter in ssh-keygen command
+- Windows SSH config files not receiving restrictive permissions
+
+### Security
+- Enhanced privacy protection by masking email addresses throughout the application
+- Reduced risk of accidental SSH key exposure by showing only fingerprints
+- Improved Windows security with proper file permissions for SSH-related files

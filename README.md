@@ -407,16 +407,27 @@ ssh -T git@github.com-personal
 
 ### Windows: SSH Agent Not Running
 
-If you see "Could not add key to ssh-agent" on Windows:
+If you see "Could not add key to ssh-agent" on Windows, the SSH agent service is likely not running.
 
-```bash
-# Start ssh-agent service (run as Administrator)
+**To fix this permanently:**
+
+```powershell
+# 1. Open PowerShell as Administrator
+# 2. Enable and start the SSH agent service
 Get-Service ssh-agent | Set-Service -StartupType Automatic
 Start-Service ssh-agent
 
-# Or manually add your key
+# 3. Verify it's running
+Get-Service ssh-agent
+```
+
+**Alternative: Manually add your key**
+```bash
+# If the above doesn't work, manually add your key
 ssh-add C:\Users\YourName\.ssh\gitm_personal_github
 ```
+
+**Note:** This is a one-time setup. Once enabled, the SSH agent will start automatically with Windows.
 
 ### Port 22 Blocked
 

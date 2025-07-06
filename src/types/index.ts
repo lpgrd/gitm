@@ -122,6 +122,8 @@ export interface SSHKeyOptions {
   bits?: number;
   /** Passphrase for key */
   passphrase?: string;
+  /** Comment for the key */
+  comment?: string;
 }
 
 /**

@@ -3,7 +3,15 @@ import { setRepoConfig, getCurrentRepo, updateRemoteUrl } from '@/utils/git';
 import { updateSSHConfig, addSSHKeyToAgent, getSSHRemoteUrl } from '@/utils/ssh';
 import { detectProvider } from '@/utils/providers';
 import { isValidProfileName } from '@/utils/shell';
-import { logError, logSuccess, logDebug, logWarning, logInfo, formatKeyValue } from '@/utils/cli';
+import {
+  logError,
+  logSuccess,
+  logDebug,
+  logWarning,
+  logInfo,
+  formatKeyValue,
+  maskEmail,
+} from '@/utils/cli';
 
 /**
  * Set a specific account for the current repository
@@ -60,7 +68,7 @@ export async function useAccount(profile: string): Promise<void> {
     logSuccess(`Account '${profile}' is now active for this repository`);
     logDebug('\nRepository configuration:');
     logDebug(formatKeyValue('Name', account.name));
-    logDebug(formatKeyValue('Email', account.email));
+    logDebug(formatKeyValue('Email', maskEmail(account.email)));
     logDebug(formatKeyValue('Remote', newUrl));
   } catch (error) {
     const errorMessage = (error as Error).message;

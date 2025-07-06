@@ -1,6 +1,7 @@
 import inquirer from 'inquirer';
 import { getCurrentRepo, detectAccountForRepo, applyAccountToRepo } from '@/utils/git';
 import { logError, logSuccess, logInfo, logWarning } from '@/utils/cli';
+import { getAccounts } from '@/lib/config';
 
 /**
  * Initialize repository with auto-detected or selected account
@@ -14,7 +15,6 @@ export async function initRepo(options: { ssh?: boolean } = { ssh: true }): Prom
 
     if (!detection) {
       // Let's check if accounts actually exist
-      const { getAccounts } = await import('@/lib/config');
       const accounts = getAccounts();
       const accountCount = Object.keys(accounts).length;
 
@@ -32,7 +32,36 @@ export async function initRepo(options: { ssh?: boolean } = { ssh: true }): Prom
 
     if (detection.profile) {
       logSuccess(`Auto-detected account: ${detection.profile}`);
-      selectedProfile = detection.profile;
+
+      const { confirmDetection } = await inquirer.prompt<{ confirmDetection: boolean }>([
+        {
+          type: 'confirm',
+          name: 'confirmDetection',
+          message: `Use auto-detected account '${detection.profile}'?`,
+          default: true,
+        },
+      ]);
+
+      if (confirmDetection) {
+        selectedProfile = detection.profile;
+      } else {
+        // Show all available accounts for selection
+        const accounts = getAccounts();
+        const allAccounts = Object.entries(accounts);
+        const { profile } = await inquirer.prompt<{ profile: string }>([
+          {
+            type: 'list',
+            name: 'profile',
+            message: 'Select account to use for this repository:',
+            choices: allAccounts.map(([profileName, account]) => ({
+              name: `${profileName} (${account.name})`,
+              value: profileName,
+            })),
+          },
+        ]);
+
+        selectedProfile = profile;
+      }
     } else if (detection.candidates && detection.candidates.length > 0) {
       const { profile } = await inquirer.prompt<{ profile: string }>([
         {
@@ -40,7 +69,7 @@ export async function initRepo(options: { ssh?: boolean } = { ssh: true }): Prom
           name: 'profile',
           message: 'Select account to use for this repository:',
           choices: detection.candidates.map(([profileName, account]) => ({
-            name: `${profileName} (${account.name} - ${account.email})`,
+            name: `${profileName} (${account.name})`,
             value: profileName,
           })),
         },

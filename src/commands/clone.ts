@@ -5,7 +5,7 @@ import { detectAccountForRepo } from '@/utils/git';
 import { getSSHRemoteUrl, updateSSHConfig, addSSHKeyToAgent } from '@/utils/ssh';
 import { getAccount, getAccounts } from '@/lib/config';
 import { CloneOptions } from '@/types';
-import { logError, logSuccess, logWarning, logInfo } from '@/utils/cli';
+import { logError, logSuccess, logWarning, logInfo, maskEmail } from '@/utils/cli';
 
 /**
  * Clone a repository with the appropriate account
@@ -35,9 +35,38 @@ export async function cloneRepo(
   let selectedAccount;
 
   if (detection.profile) {
-    selectedProfile = detection.profile;
-    selectedAccount = detection.account;
-    logSuccess(`Auto-detected account: ${selectedProfile}`);
+    logSuccess(`Auto-detected account: ${detection.profile}`);
+
+    const { confirmDetection } = await inquirer.prompt<{ confirmDetection: boolean }>([
+      {
+        type: 'confirm',
+        name: 'confirmDetection',
+        message: `Use auto-detected account '${detection.profile}'?`,
+        default: true,
+      },
+    ]);
+
+    if (confirmDetection) {
+      selectedProfile = detection.profile;
+      selectedAccount = detection.account;
+    } else {
+      // Show all available accounts for selection
+      const allAccounts = Object.entries(accounts);
+      const { profile } = await inquirer.prompt<{ profile: string }>([
+        {
+          type: 'list',
+          name: 'profile',
+          message: 'Select account to use for this repository:',
+          choices: allAccounts.map(([profileName, account]) => ({
+            name: `${profileName} (${account.name})`,
+            value: profileName,
+          })),
+        },
+      ]);
+
+      selectedProfile = profile;
+      selectedAccount = getAccount(profile);
+    }
   } else if (detection.candidates && detection.candidates.length > 0) {
     const { profile } = await inquirer.prompt<{ profile: string }>([
       {
@@ -45,7 +74,7 @@ export async function cloneRepo(
         name: 'profile',
         message: 'Select account to use for this repository:',
         choices: detection.candidates.map(([profileName, account]) => ({
-          name: `${profileName} (${account.name} - ${account.email})`,
+          name: `${profileName} (${account.name})`,
           value: profileName,
         })),
       },
@@ -103,7 +132,7 @@ export async function cloneRepo(
 
     logSuccess(`Git config set for account '${selectedProfile}'`);
     logInfo(`Repository: ${path.resolve(targetDir)}`);
-    logInfo(`Account: ${selectedAccount.name} <${selectedAccount.email}>`);
+    logInfo(`Account: ${selectedAccount.name} <${maskEmail(selectedAccount.email)}>`);
 
     if (!useSSH && url.startsWith('https://')) {
       logInfo("Note: Cloned with HTTPS. Use 'gitm use <profile>' to switch to SSH");
