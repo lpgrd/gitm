@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code coverage dependencies and scripts (`vitest coverage`, `c8`, `jest`)
 - Duplicate npm scripts (consolidated lint/format variants)
 
-## [1.1.0] - UN-RELEASED
+## [1.1.0] - 2025-07-06
 
 ### Added
 - **Email Masking**: All email addresses are now masked by default in command outputs (e.g., `u***r@e****e.com`)
