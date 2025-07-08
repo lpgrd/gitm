@@ -1,20 +1,29 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, jest, mock } from 'bun:test';
 import { detectAccountForRepo } from '@/utils/git';
-import { detectProvider } from '@/utils/providers';
-import { getAccounts } from '@/lib/config';
 import { createMockAccount } from '../../helpers';
 
-vi.mock('@/utils/providers');
-vi.mock('@/lib/config');
+// Mock the modules before importing
+
+mock.module('@/utils/providers', () => ({
+  detectProvider: jest.fn(),
+}));
+
+mock.module('@/lib/config', () => ({
+  getAccounts: jest.fn(),
+}));
+
+// Now import the modules after mocking
+import { detectProvider } from '@/utils/providers';
+import { getAccounts } from '@/lib/config';
 
 describe('git utilities', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('detectAccountForRepo', () => {
     it('should return null when no provider is detected', async () => {
-      vi.mocked(detectProvider).mockReturnValue(null);
+      (detectProvider as any).mockReturnValue(null);
       
       const result = await detectAccountForRepo('invalid-url');
       
@@ -27,13 +36,13 @@ describe('git utilities', () => {
         username: 'testuser',
       });
       
-      vi.mocked(detectProvider).mockReturnValue({
+      (detectProvider as any).mockReturnValue({
         provider: 'github',
         organization: 'testuser',
         repository: 'test-repo',
       });
       
-      vi.mocked(getAccounts).mockReturnValue({
+      (getAccounts as any).mockReturnValue({
         personal: mockAccount,
       });
       
@@ -56,13 +65,13 @@ describe('git utilities', () => {
         username: 'differentuser',
       });
       
-      vi.mocked(detectProvider).mockReturnValue({
+      (detectProvider as any).mockReturnValue({
         provider: 'github',
         organization: 'someorg',
         repository: 'test-repo',
       });
       
-      vi.mocked(getAccounts).mockReturnValue({
+      (getAccounts as any).mockReturnValue({
         work: mockAccount,
       });
       
@@ -92,13 +101,13 @@ describe('git utilities', () => {
         email: 'work@example.com',
       });
       
-      vi.mocked(detectProvider).mockReturnValue({
+      (detectProvider as any).mockReturnValue({
         provider: 'github',
         organization: 'someorg',
         repository: 'test-repo',
       });
       
-      vi.mocked(getAccounts).mockReturnValue({
+      (getAccounts as any).mockReturnValue({
         personal: personalAccount,
         work: workAccount,
       });
@@ -131,13 +140,13 @@ describe('git utilities', () => {
         username: 'gluser',
       });
       
-      vi.mocked(detectProvider).mockReturnValue({
+      (detectProvider as any).mockReturnValue({
         provider: 'bitbucket',
         organization: 'bbuser',
         repository: 'test-repo',
       });
       
-      vi.mocked(getAccounts).mockReturnValue({
+      (getAccounts as any).mockReturnValue({
         github: githubAccount,
         gitlab: gitlabAccount,
       });
@@ -165,13 +174,13 @@ describe('git utilities', () => {
         username: 'TestUser',
       });
       
-      vi.mocked(detectProvider).mockReturnValue({
+      (detectProvider as any).mockReturnValue({
         provider: 'github',
         organization: 'testuser',
         repository: 'test-repo',
       });
       
-      vi.mocked(getAccounts).mockReturnValue({
+      (getAccounts as any).mockReturnValue({
         personal: mockAccount,
       });
       

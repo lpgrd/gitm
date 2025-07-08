@@ -3,6 +3,11 @@ import crypto from 'crypto';
 import { SSH_CONFIG_PATH, DEFAULT_SSH_KEY_TYPE, SSH_KEY_DIR } from '@/config/constants';
 import { SSHKeyOptions } from '@/types';
 import { safeExec, isPathSafe } from '@/utils/shell';
+import {
+  getFingerprintNative,
+  generateKeyNative,
+  setWindowsPermissionsBatchNative,
+} from '@/utils/ssh-native';
 
 /**
  * Set secure file permissions for SSH-related files
@@ -12,8 +17,13 @@ import { safeExec, isPathSafe } from '@/utils/shell';
 export async function setSecureFilePermissions(filePath: string): Promise<void> {
   try {
     if (process.platform === 'win32') {
-      // Windows: Use icacls to set permissions
-      // Remove inheritance and grant only current user full control
+      // Try native batch operation first for better performance
+      const batchSuccess = await setWindowsPermissionsBatchNative([filePath]);
+      if (batchSuccess) {
+        return;
+      }
+
+      // Fallback to sequential icacls commands
       const username = process.env.USERNAME || process.env.USER;
       if (!username) {
         throw new Error('Could not determine current user');
@@ -54,12 +64,20 @@ export async function setSecureFilePermissions(filePath: string): Promise<void> 
 }
 
 /**
- * Generate a new SSH key pair
- * @param keyPath - Path where the key should be saved
+ * Generate a new SSH key pair with automatic fallback to ssh-keygen
+ * @param keyPath - Path where the key should be saved (without extension)
  * @param email - Email address for the key comment
- * @param comment - Additional comment for the key
+ * @param comment - Additional comment for the key (appended to email)
  * @param options - SSH key generation options
- * @throws Error if key generation fails
+ * @param options.type - Key type ('ed25519' or 'rsa'), defaults to 'ed25519'
+ * @param options.bits - Key size in bits (only for RSA keys)
+ * @param options.passphrase - Passphrase for the key (empty string for no passphrase)
+ * @throws Error if key generation fails or path is invalid
+ * @example
+ * await generateSSHKey('/home/user/.ssh/id_ed25519', 'user@example.com', 'work', {
+ *   type: 'ed25519',
+ *   passphrase: ''
+ * });
  */
 export async function generateSSHKey(
   keyPath: string,
@@ -75,24 +93,34 @@ export async function generateSSHKey(
   const passphrase = options.passphrase || '';
   const comment = options.comment || email;
 
-  const args = ['-t', keyType, '-f', keyPath, '-N', passphrase, '-C', comment];
+  // Try native key generation first for better performance
+  const nativeSuccess = await generateKeyNative(keyPath, {
+    type: keyType,
+    bits: options.bits,
+    passphrase,
+    comment,
+  });
+  if (!nativeSuccess) {
+    // Fallback to ssh-keygen
+    const args = ['-t', keyType, '-f', keyPath, '-N', passphrase, '-C', comment];
 
-  if (keyType === 'rsa' && options.bits) {
-    args.splice(2, 0, '-b', options.bits.toString());
+    if (keyType === 'rsa' && options.bits) {
+      args.splice(2, 0, '-b', options.bits.toString());
+    }
+
+    try {
+      await safeExec('ssh-keygen', args);
+    } catch (error) {
+      throw new Error(`Failed to generate SSH key: ${(error as Error).message}`);
+    }
   }
 
-  try {
-    await safeExec('ssh-keygen', args);
+  // Set secure permissions on the private key
+  await setSecureFilePermissions(keyPath);
 
-    // Set secure permissions on the private key
-    await setSecureFilePermissions(keyPath);
-
-    // Public key should be readable but not writable by others
-    if (process.platform !== 'win32') {
-      await fs.chmod(`${keyPath}.pub`, 0o644);
-    }
-  } catch (error) {
-    throw new Error(`Failed to generate SSH key: ${(error as Error).message}`);
+  // Public key should be readable but not writable by others
+  if (process.platform !== 'win32') {
+    await fs.chmod(`${keyPath}.pub`, 0o644);
   }
 }
 
@@ -282,10 +310,19 @@ export async function readPublicKey(keyPath: string): Promise<string> {
 /**
  * Get the fingerprint of an SSH public key
  * @param publicKey - The SSH public key content
+ * @param keyPath - Optional path to key file for native optimization
  * @returns The SHA256 fingerprint of the key
  */
-export function getSSHKeyFingerprint(publicKey: string): string {
-  // Extract the base64-encoded key data (second part of the key)
+export async function getSSHKeyFingerprint(publicKey: string, keyPath?: string): Promise<string> {
+  // Try native implementation first if key path is provided
+  if (keyPath) {
+    const nativeFingerprint = await getFingerprintNative(`${keyPath}.pub`);
+    if (nativeFingerprint) {
+      return nativeFingerprint;
+    }
+  }
+
+  // Fallback to JavaScript implementation
   const keyParts = publicKey.trim().split(/\s+/);
   if (keyParts.length < 2) {
     throw new Error('Invalid SSH public key format');
@@ -306,16 +343,20 @@ export function getSSHKeyFingerprint(publicKey: string): string {
 /**
  * Get SSH key info including type and fingerprint
  * @param publicKey - The SSH public key content
+ * @param keyPath - Optional path to key file for native optimization
  * @returns Object with key type and fingerprint
  */
-export function getSSHKeyInfo(publicKey: string): { type: string; fingerprint: string } {
+export async function getSSHKeyInfo(
+  publicKey: string,
+  keyPath?: string
+): Promise<{ type: string; fingerprint: string }> {
   const keyParts = publicKey.trim().split(/\s+/);
   if (keyParts.length < 2) {
     throw new Error('Invalid SSH public key format');
   }
 
   const keyType = keyParts[0]; // e.g., ssh-rsa, ssh-ed25519
-  const fingerprint = getSSHKeyFingerprint(publicKey);
+  const fingerprint = await getSSHKeyFingerprint(publicKey, keyPath);
 
   return {
     type: keyType,

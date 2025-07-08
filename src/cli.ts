@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import chalk from 'chalk';
+import { APP_VERSION } from '@/config/version';
 import { addAccount } from '@/commands/add';
 import { listAccounts } from '@/commands/list';
 import { useAccount } from '@/commands/use';
@@ -12,7 +12,6 @@ import { showStatus } from '@/commands/status';
 import { authenticateAccount } from '@/commands/auth';
 import { verifyAccount } from '@/commands/verify';
 import { listProviders, addProvider, removeProvider, showProvider } from '@/commands/provider';
-import { APP_VERSION } from '@/config/version';
 
 const program = new Command();
 
@@ -89,16 +88,22 @@ program.exitOverride();
 
 try {
   program.parse();
-} catch (error: any) {
+} catch (error) {
   // Commander throws specific errors for help and version that we should handle gracefully
-  if (error.code === 'commander.version') {
-    // Version was displayed successfully, exit cleanly
-    process.exit(0);
-  } else if (error.code === 'commander.help' || error.code === 'commander.helpDisplayed') {
-    // Help was displayed successfully, exit cleanly
-    process.exit(0);
+  if (error instanceof Error && 'code' in error) {
+    const errorCode = (error as Error & { code: string }).code;
+    if (errorCode === 'commander.version') {
+      // Version was displayed successfully, exit cleanly
+      process.exit(0);
+    } else if (errorCode === 'commander.help' || errorCode === 'commander.helpDisplayed') {
+      // Help was displayed successfully, exit cleanly
+      process.exit(0);
+    } else {
+      console.error('Error:', error.message || error);
+      process.exit(1);
+    }
   } else {
-    console.error(chalk.red('Error:'), error.message || error);
+    console.error('Error:', error);
     process.exit(1);
   }
 }

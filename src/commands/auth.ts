@@ -46,7 +46,7 @@ export async function authenticateAccount(profile: string): Promise<void> {
 
   try {
     const publicKey = await readPublicKey(account.sshKeyPath);
-    const keyInfo = getSSHKeyInfo(publicKey);
+    const keyInfo = await getSSHKeyInfo(publicKey, account.sshKeyPath);
 
     console.log(chalk.bold('\nSSH Key Details for ' + profile + ':\n'));
     console.log(chalk.cyan('Type: ') + keyInfo.type);
@@ -337,9 +337,10 @@ async function testSSHConnection(
       log(chalk.gray(output.trim()), LogLevel.PLAIN);
       return false;
     }
-  } catch (error: any) {
+  } catch (error) {
     // SSH test commands often "fail" with exit code 1 even on success
-    const output = error.stdout || error.stderr || error.message;
+    const errorWithOutput = error as { stdout?: string; stderr?: string; message: string };
+    const output = errorWithOutput.stdout || errorWithOutput.stderr || errorWithOutput.message;
 
     if (
       output.includes('successfully authenticated') ||

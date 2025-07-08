@@ -31,7 +31,7 @@
 ## Prerequisites
 
 ### All Platforms
-- Node.js 14 or higher
+- Node.js 14+ or Bun 1.0+ (Bun recommended for better performance)
 - Git installed and configured
 
 ### Windows Specific Requirements
@@ -54,7 +54,17 @@ gitm requires OpenSSH to be installed. You have several options:
 ## Installation
 
 ```bash
+# Using npm
 npm install -g @loopgrid/gitm
+
+# Using bun
+bun install -g @loopgrid/gitm
+
+# Using pnpm
+pnpm install -g @loopgrid/gitm
+
+# Using yarn
+yarn global add @loopgrid/gitm
 ```
 
 ## Quick Start
@@ -495,18 +505,20 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Development
 
+This project uses [Bun](https://bun.sh) as the JavaScript runtime and package manager for optimal performance. Make sure you have Bun installed before contributing.
+
 ```bash
 # Install dependencies
-npm install
+bun install
 
 # Run in development
-npm run dev
+bun run dev
 
 # Build
-npm run build
+bun run build
 
 # Run tests
-npm test
+bun test
 
 # Type checking
 npm run typecheck

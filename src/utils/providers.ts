@@ -2,13 +2,33 @@ import { RepoInfo, GitProvider } from '@/types';
 import { GIT_PROVIDERS } from '@/config/constants';
 import { getCustomProviders } from '@/lib/config';
 
+// Cache for compiled regex patterns and providers
+let cachedProviders: Record<string, GitProvider> | null = null;
+let providersLastUpdated = 0;
+const CACHE_TTL = 60000; // 1 minute cache TTL for custom providers
+
+// Pre-compiled regex for gitm-managed URLs
+const GITM_MANAGED_PATTERN = /^git@([^:]+)-([^:]+):([^/]+)\/(.+?)(?:\.git)?$/;
+
 /**
- * Get all providers including custom ones
- * @returns Combined providers object
+ * Get all providers including custom ones with caching
+ * @returns Combined providers object with built-in and custom providers
+ * @remarks Cache is refreshed every 60 seconds to pick up custom provider changes
  */
 export function getAllProviders(): Record<string, GitProvider> {
+  const now = Date.now();
+
+  // Return cached providers if still valid
+  if (cachedProviders && now - providersLastUpdated < CACHE_TTL) {
+    return cachedProviders;
+  }
+
+  // Rebuild cache
   const customProviders = getCustomProviders();
-  return { ...GIT_PROVIDERS, ...customProviders };
+  cachedProviders = { ...GIT_PROVIDERS, ...customProviders };
+  providersLastUpdated = now;
+
+  return cachedProviders;
 }
 
 /**
@@ -18,8 +38,7 @@ export function getAllProviders(): Record<string, GitProvider> {
  */
 export function detectProvider(url: string): RepoInfo | null {
   // First check if this is a gitm-managed URL (e.g., git@github.com-personal:org/repo.git)
-  const gitmManagedPattern = /^git@([^:]+)-([^:]+):([^/]+)\/(.+?)(?:\.git)?$/;
-  const gitmMatch = url.match(gitmManagedPattern);
+  const gitmMatch = url.match(GITM_MANAGED_PATTERN);
 
   if (gitmMatch) {
     const [, domain, , organization, repository] = gitmMatch;
@@ -57,17 +76,21 @@ export function detectProvider(url: string): RepoInfo | null {
   // Fall back to standard detection
   const allProviders = getAllProviders();
 
+  // Try to match against each provider's patterns
   for (const [key, provider] of Object.entries(allProviders)) {
+    // Early exit optimization: skip if URL doesn't contain provider host
+    if (!url.includes(provider.host) && !url.includes(provider.sshHost || provider.host)) {
+      continue;
+    }
+
     for (const pattern of provider.urlPatterns) {
-      if (pattern.test(url)) {
-        const match = url.match(pattern);
-        if (match) {
-          return {
-            provider: key,
-            organization: match[1],
-            repository: match[2].replace(/\.git$/, ''),
-          };
-        }
+      const match = pattern.exec(url);
+      if (match && match[1] && match[2]) {
+        return {
+          provider: key,
+          organization: match[1],
+          repository: match[2].replace(/\.git$/, ''),
+        };
       }
     }
   }

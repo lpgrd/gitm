@@ -18,19 +18,16 @@ test/
 
 ```bash
 # Run all tests
-npm test
+bun test
 
 # Run tests in watch mode
-npm run test
+bun test --watch
 
-# Run tests once
-npm run test:run
+# Run specific test file
+bun test path/to/test.ts
 
 # Run with coverage
-npm run test:coverage
-
-# Open test UI
-npm run test:ui
+bun test --coverage
 ```
 
 ## Writing Tests
@@ -45,7 +42,7 @@ Unit tests should:
 
 Example:
 ```typescript
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, jest } from 'bun:test';
 import { myFunction } from '@/utils/myUtil';
 
 describe('myFunction', () => {
@@ -84,6 +81,6 @@ We aim for high test coverage:
 
 View coverage reports:
 ```bash
-npm run test:coverage
-open coverage/index.html
+bun test --coverage
+# Coverage report will be displayed in terminal
 ```

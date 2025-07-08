@@ -6,9 +6,12 @@ import { sanitizeForFilename } from '@/utils/shell';
 
 /**
  * Get the current repository's remote information
- * @param git - SimpleGit instance (optional)
- * @returns Remote information
+ * @param git - Optional SimpleGit instance (creates new one if not provided)
+ * @returns Remote information including URL and name
  * @throws Error if not in a git repository or no remote configured
+ * @example
+ * const repo = await getCurrentRepo();
+ * console.log(repo.url); // 'https://github.com/user/repo.git'
  */
 export async function getCurrentRepo(git?: SimpleGit): Promise<RemoteInfo> {
   const gitInstance = git || simpleGit(process.cwd());

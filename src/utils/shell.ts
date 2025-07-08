@@ -56,10 +56,15 @@ export function safeExec(
         // Git commands often exit with 1 even on success
         resolve({ stdout, stderr });
       } else {
-        const error = new Error(`Command failed with exit code ${code}`);
-        (error as any).code = code;
-        (error as any).stdout = stdout;
-        (error as any).stderr = stderr;
+        interface CommandError extends Error {
+          code: number;
+          stdout: string;
+          stderr: string;
+        }
+        const error = new Error(`Command failed with exit code ${code}`) as CommandError;
+        error.code = code || -1;
+        error.stdout = stdout;
+        error.stderr = stderr;
         reject(error);
       }
     });
@@ -69,8 +74,12 @@ export function safeExec(
 /**
  * Validate that a path stays within the allowed directory
  * @param inputPath - The path to validate
- * @param allowedDir - The allowed directory
- * @returns True if path is safe
+ * @param allowedDir - The directory that inputPath must be within
+ * @returns True if path is within allowed directory
+ * @remarks Prevents directory traversal attacks by ensuring paths stay within bounds
+ * @example
+ * isPathSafe('/home/user/.ssh/id_rsa', '/home/user/.ssh'); // true
+ * isPathSafe('/home/user/../other/.ssh/id_rsa', '/home/user/.ssh'); // false
  */
 export function isPathSafe(inputPath: string, allowedDir: string): boolean {
   const resolved = path.resolve(inputPath);

@@ -7,7 +7,7 @@ on:
       - 'package.json'
       - 'src/**'
       - 'tsconfig.json'
-      - 'tsup.config.ts'
+      - 'build.bun.ts'
   workflow_dispatch: # Allow manual trigger
 
 permissions:
@@ -28,7 +28,12 @@ jobs:
       with:
         fetch-depth: 0 # Need full history to check tags
     
-    - name: Setup Node.js
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+    
+    - name: Setup Node.js for npm publish
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
@@ -38,7 +43,7 @@ jobs:
       id: check
       run: |
         # Get the current version from package.json
-        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        CURRENT_VERSION=$(bun -e "console.log(require('./package.json').version)")
         echo "Current version: $CURRENT_VERSION"
         
         # Check if this version tag already exists
@@ -61,17 +66,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Node.js
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+    
+    - name: Setup Node.js for npm publish
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         registry-url: 'https://registry.npmjs.org'
     
     - name: Install dependencies
-      run: npm ci
+      run: bun install --frozen-lockfile
     
     - name: Build project
-      run: npm run build
+      run: bun run build
     
     - name: Publish to npm
       run: npm publish

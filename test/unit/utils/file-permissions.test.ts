@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, jest } from 'bun:test';
 import fs from 'fs/promises';
 import { setSecureFilePermissions } from '@/utils/ssh';
 import * as shell from '@/utils/shell';
 
 describe('File Permissions', () => {
-  const mockSafeExec = vi.spyOn(shell, 'safeExec');
-  const mockChmod = vi.spyOn(fs, 'chmod');
+  const mockSafeExec = jest.spyOn(shell, 'safeExec');
+  const mockChmod = jest.spyOn(fs, 'chmod');
   const originalPlatform = process.platform;
   const originalUsername = process.env.USERNAME;
   const originalUser = process.env.USER;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     mockSafeExec.mockResolvedValue({ stdout: '', stderr: '' });
     mockChmod.mockResolvedValue();
   });
@@ -90,7 +90,7 @@ describe('File Permissions', () => {
 
   describe('Error handling', () => {
     it('should log warning but not throw on permission errors', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
       mockChmod.mockRejectedValue(new Error('Permission denied'));
       
       await setSecureFilePermissions('/test/path');

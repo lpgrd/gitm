@@ -83,9 +83,10 @@ export async function verifyAccount(profile: string): Promise<void> {
       logInfo('  Run: gitm auth ' + profile);
       allGood = false;
     }
-  } catch (error: any) {
+  } catch (error) {
     // SSH commands to git providers often exit with code 1 even on success
-    const output = error.stderr || error.message;
+    const errorWithOutput = error as { stderr?: string; message: string };
+    const output = errorWithOutput.stderr || errorWithOutput.message;
 
     if (
       output.includes('successfully authenticated') ||

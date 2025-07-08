@@ -84,3 +84,18 @@ test-repo/
 test-repos/
 test-gitm-*/
 **/test-output/
+
+# Native module build artifacts
+native/target/
+native/*.node
+native/index.js
+native/index.d.ts
+native/artifacts.json
+
+# Rust/Cargo files
+**/*.rs.bk
+native/Cargo.lock
+
+# Bun specific
+bun.lockb
+.bun/

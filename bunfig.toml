@@ -1,0 +1,17 @@
+# Bun configuration for GitM
+
+[install]
+# Install peer dependencies
+peer = true
+
+[install.scopes]
+# Use Bun's built-in modules when available
+"@types/node" = "bun"
+
+[run]
+# Use Bun's faster runtime
+bun = true
+
+[test]
+# Use Bun's test runner
+runner = "bun"
